@@ -62,8 +62,6 @@ private:
 
   virtual void processMessage( const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& message );
 
-  rviz::Arrow* arrow_;
-  rviz::Axes* axes_;
   boost::shared_ptr<CovarianceVisual> covariance_;
   bool pose_valid_;
   PoseWithCovarianceDisplaySelectionHandlerPtr coll_handler_;

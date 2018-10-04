@@ -119,7 +119,6 @@ public:
    * \brief Get the root scene node of the orientation part of this covariance
    * @return the root scene node of the orientation part of this covariance
    */
-  Ogre::SceneNode* getOrientationSceneNode() { return orientation_root_node_; }
 
   /**
    * \brief Get the shape used to display position covariance
@@ -179,8 +178,6 @@ private:
   Ogre::SceneNode* position_scale_node_;
   Ogre::SceneNode* position_node_;
 
-  Ogre::SceneNode* orientation_root_node_;
-  Ogre::SceneNode* orientation_offset_node_[kNumOriShapes];
 
   rviz::Shape* position_shape_;   ///< Ellipse used for the position covariance
 

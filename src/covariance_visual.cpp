@@ -184,33 +184,9 @@ CovarianceVisual::CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::Sce
 
   // Node to scale the orientation part of the covariance. May be attached to both the local (root) node or the fixed frame node.
   // May be re-attached later by setRotatingFrame()
-  if(local_rotation_)
-    orientation_root_node_ = root_node_->createChildSceneNode();
-  else
-    orientation_root_node_ = fixed_orientation_node_->createChildSceneNode();
-
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    // Node to position and orient the shape along the axis. One for each axis.
-    orientation_offset_node_[i] = orientation_root_node_->createChildSceneNode();
-    // Does not inherit scale from the parent. This is needed to keep the cylinders with the same height. The scale is set by setOrientationScale()
-    orientation_offset_node_[i]->setInheritScale( false );
-
-
-    // Initialize all current scales to 0
-    current_ori_scale_[i] = Ogre::Vector3(0,0,0);
-  }
 
   // Position the cylindes at position 1.0 in the respective axis, and perpendicular to the axis.
   // x-axis (roll)
-  orientation_offset_node_[kRoll]->setPosition( Ogre::Vector3::UNIT_X );
-  orientation_offset_node_[kRoll]->setOrientation( Ogre::Quaternion(Ogre::Degree( 90 ), Ogre::Vector3::UNIT_X ) * Ogre::Quaternion( Ogre::Degree( 90 ), Ogre::Vector3::UNIT_Z ) );
-  // y-axis (pitch)
-  orientation_offset_node_[kPitch]->setPosition( Ogre::Vector3( Ogre::Vector3::UNIT_Y ) );
-  orientation_offset_node_[kPitch]->setOrientation( Ogre::Quaternion( Ogre::Degree( 90 ), Ogre::Vector3::UNIT_Y ) );
-  // z-axis (yaw)
-  orientation_offset_node_[kYaw]->setPosition( Ogre::Vector3( Ogre::Vector3::UNIT_Z ) );
-  orientation_offset_node_[kYaw]->setOrientation( Ogre::Quaternion( Ogre::Degree( 90 ), Ogre::Vector3::UNIT_X ) );
   // z-axis (yaw 2D)
   // NOTE: rviz use a cone defined by the file rviz/ogre_media/models/rviz_cone.mesh, and it's 
   //       origin is not at the top of the cone. Since we want the top to be at the origin of 
@@ -220,9 +196,6 @@ CovarianceVisual::CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::Sce
   //          from the pose origin, although it's only noticeable with big scales.
   // FIXME: Find the right value from the cone.mesh file, or implement a class that draws
   //        something like a 2D "pie slice" and use it instead of the cone.
-  static const double cone_origin_to_top = 0.49115;
-  orientation_offset_node_[kYaw2D]->setPosition(cone_origin_to_top * Ogre::Vector3::UNIT_X);
-  orientation_offset_node_[kYaw2D]->setOrientation(Ogre::Quaternion( Ogre::Degree( 90 ), Ogre::Vector3::UNIT_Z ));
 
   // set initial visibility and scale
   // root node is always visible. The visibility will be updated on its childs.
@@ -385,24 +358,10 @@ void CovarianceVisual::setPositionScale( float pos_scale )
 void CovarianceVisual::setOrientationOffset( float ori_offset )
 {
   // Scale the orientation root node to position the shapes along the axis
-  orientation_root_node_->setScale( ori_offset, ori_offset, ori_offset );
   // The scale the offset_nodes as well so the displayed shape represents a 1-sigma 
   // standard deviation when displayed with an scale of 1.0
   // NOTE: We only want to change the scales of the dimentions that represent the 
   //       orientation covariance. The other dimensions are set to 1.0.
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    if(i == kYaw2D)
-    {
-      // For 2D, the angle is only encoded on x, but we also scale on y to put the top of the cone at the pose origin
-      orientation_offset_node_[i]->setScale( ori_offset, ori_offset, 1.0 );
-    }
-    else
-    {
-      // For 3D, the angle covariance is encoded on x and z dimensions
-      orientation_offset_node_[i]->setScale( ori_offset, 1.0, ori_offset );
-    }
-  }
 }
 
 void CovarianceVisual::setOrientationScale( float ori_scale )
@@ -470,10 +429,6 @@ void CovarianceVisual::setOrientationVisible( bool visible )
 
 void CovarianceVisual::updateOrientationVisibility()
 {
-  orientation_offset_node_[kRoll]->setVisible( orientation_visible_ && !pose_2d_);
-  orientation_offset_node_[kPitch]->setVisible( orientation_visible_ && !pose_2d_);
-  orientation_offset_node_[kYaw]->setVisible( orientation_visible_ && !pose_2d_);
-  orientation_offset_node_[kYaw2D]->setVisible( orientation_visible_ && pose_2d_);
 }
 
 
@@ -503,11 +458,6 @@ void CovarianceVisual::setRotatingFrame( bool is_local_rotation )
     return;
 
   local_rotation_ = is_local_rotation;
-
-  if(local_rotation_)
-    root_node_->addChild( fixed_orientation_node_->removeChild( orientation_root_node_->getName() ) );
-  else
-    fixed_orientation_node_->addChild( root_node_->removeChild( orientation_root_node_->getName() ) );
 
 }
 

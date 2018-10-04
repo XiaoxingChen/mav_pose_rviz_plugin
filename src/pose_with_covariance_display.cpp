@@ -89,17 +89,6 @@ public:
   {
     if( display_->pose_valid_ )
     {
-      if( display_->shape_property_->getOptionInt() == PoseWithCovarianceDisplay::Arrow )
-      {
-        aabbs.push_back( display_->arrow_->getHead()->getEntity()->getWorldBoundingBox() );
-        aabbs.push_back( display_->arrow_->getShaft()->getEntity()->getWorldBoundingBox() );
-      }
-      else
-      {
-        aabbs.push_back( display_->axes_->getXShape()->getEntity()->getWorldBoundingBox() );
-        aabbs.push_back( display_->axes_->getYShape()->getEntity()->getWorldBoundingBox() );
-        aabbs.push_back( display_->axes_->getZShape()->getEntity()->getWorldBoundingBox() );
-      }
 
       if( display_->covariance_property_->getBool() )
       {
@@ -191,18 +180,6 @@ void PoseWithCovarianceDisplay::onInitialize()
 {
   MFDClass::onInitialize();
 
-  arrow_ = new rviz::Arrow( scene_manager_, scene_node_,
-                            shaft_length_property_->getFloat(),
-                            shaft_radius_property_->getFloat(),
-                            head_length_property_->getFloat(),
-                            head_radius_property_->getFloat() );
-  // Arrow points in -Z direction, so rotate the orientation before display.
-  // TODO: is it safe to change Arrow to point in +X direction?
-  arrow_->setOrientation( Ogre::Quaternion( Ogre::Degree( -90 ), Ogre::Vector3::UNIT_Y ));
-
-  axes_ = new rviz::Axes( scene_manager_, scene_node_,
-                          axes_length_property_->getFloat(),
-                          axes_radius_property_->getFloat() );
 
   covariance_ = covariance_property_->createAndPushBackVisual(scene_manager_, scene_node_ );
 
@@ -210,19 +187,11 @@ void PoseWithCovarianceDisplay::onInitialize()
   updateColorAndAlpha();
 
   coll_handler_.reset( new PoseWithCovarianceDisplaySelectionHandler( this, context_ ));
-  coll_handler_->addTrackedObjects( arrow_->getSceneNode() );
-  coll_handler_->addTrackedObjects( axes_->getSceneNode() );
   coll_handler_->addTrackedObjects( covariance_->getPositionSceneNode() );
-  coll_handler_->addTrackedObjects( covariance_->getOrientationSceneNode() );
 }
 
 PoseWithCovarianceDisplay::~PoseWithCovarianceDisplay()
 {
-  if ( initialized() )
-  {
-    delete arrow_;
-    delete axes_;
-  }
 }
 
 void PoseWithCovarianceDisplay::onEnable()
@@ -233,27 +202,17 @@ void PoseWithCovarianceDisplay::onEnable()
 
 void PoseWithCovarianceDisplay::updateColorAndAlpha()
 {
-  Ogre::ColourValue color = color_property_->getOgreColor();
-  color.a = alpha_property_->getFloat();
-
-  arrow_->setColor( color );
 
   context_->queueRender();
 }
 
 void PoseWithCovarianceDisplay::updateArrowGeometry()
 {
-  arrow_->set( shaft_length_property_->getFloat(),
-               shaft_radius_property_->getFloat(),
-               head_length_property_->getFloat(),
-               head_radius_property_->getFloat() );
   context_->queueRender();
 }
 
 void PoseWithCovarianceDisplay::updateAxisGeometry()
 {
-  axes_->set( axes_length_property_->getFloat(),
-              axes_radius_property_->getFloat() );
   context_->queueRender();
 }
 
@@ -280,15 +239,10 @@ void PoseWithCovarianceDisplay::updateShapeVisibility()
 {
   if( !pose_valid_ )
   {
-    arrow_->getSceneNode()->setVisible( false );
-    axes_->getSceneNode()->setVisible( false );
     covariance_->setVisible( false );
   }
   else
   {
-    bool use_arrow = (shape_property_->getOptionInt() == Arrow);
-    arrow_->getSceneNode()->setVisible( use_arrow );
-    axes_->getSceneNode()->setVisible( !use_arrow );
     covariance_property_->updateVisibility();
   }
 }
@@ -313,11 +267,6 @@ void PoseWithCovarianceDisplay::processMessage( const geometry_msgs::PoseWithCov
   pose_valid_ = true;
   updateShapeVisibility();
 
-  axes_->setPosition( position );
-  axes_->setOrientation( orientation );
-
-  arrow_->setPosition( position );
-  arrow_->setOrientation( orientation * Ogre::Quaternion( Ogre::Degree( -90 ), Ogre::Vector3::UNIT_Y ) );
 
   covariance_->setPosition( position );
   covariance_->setOrientation( orientation );
