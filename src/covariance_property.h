@@ -21,7 +21,7 @@ namespace Ogre
   class SceneNode;
 }
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 class CovarianceVisual;
@@ -92,6 +92,6 @@ private:
   rviz::FloatProperty* orientation_scale_property_;
 };
 
-} // end namespace rviz_plugin_covariance
+} // end namespace mav_pose_rviz_plugin
 
 #endif // COVARIANCE_PROPERTY_H

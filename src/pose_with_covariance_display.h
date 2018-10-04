@@ -20,7 +20,7 @@ class BoolProperty;
 class Shape;
 }
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 class CovarianceVisual;
@@ -86,6 +86,6 @@ private:
   friend class PoseWithCovarianceDisplaySelectionHandler;
 };
 
-} // namespace rviz_plugin_covariance
+} // namespace mav_pose_rviz_plugin
 
 #endif // POSE_WITH_COVARIANCE_DISPLAY_H

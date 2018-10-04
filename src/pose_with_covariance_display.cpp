@@ -53,7 +53,7 @@
 
 using namespace rviz;
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 class PoseWithCovarianceDisplaySelectionHandler: public SelectionHandler
@@ -106,12 +106,6 @@ public:
         if(display_->covariance_property_->getPositionBool())
         {
           aabbs.push_back( display_->covariance_->getPositionShape()->getEntity()->getWorldBoundingBox() );
-        }
-        if(display_->covariance_property_->getOrientationBool())
-        {
-          aabbs.push_back( display_->covariance_->getOrientationShape(CovarianceVisual::kRoll)->getEntity()->getWorldBoundingBox() );
-          aabbs.push_back( display_->covariance_->getOrientationShape(CovarianceVisual::kPitch)->getEntity()->getWorldBoundingBox() );
-          aabbs.push_back( display_->covariance_->getOrientationShape(CovarianceVisual::kYaw)->getEntity()->getWorldBoundingBox() );
         }
       }
     }
@@ -341,7 +335,7 @@ void PoseWithCovarianceDisplay::reset()
   updateShapeVisibility();
 }
 
-} // namespace rviz_plugin_covariance
+} // namespace mav_pose_rviz_plugin
 
 #include <pluginlib/class_list_macros.h>
-PLUGINLIB_EXPORT_CLASS( rviz_plugin_covariance::PoseWithCovarianceDisplay, rviz::Display )
+PLUGINLIB_EXPORT_CLASS( mav_pose_rviz_plugin::PoseWithCovarianceDisplay, rviz::Display )

@@ -29,7 +29,7 @@ namespace Eigen
   typedef Matrix<double,6,6> Matrix6d;
 }
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 class CovarianceProperty;
@@ -131,7 +131,6 @@ public:
    * \brief Get the shape used to display orientation covariance in an especific axis
    * @return the shape used to display orientation covariance in an especific axis
    */  
-  rviz::Shape* getOrientationShape(ShapeIndex index);
 
   /**
    * \brief Sets user data on all ogre objects we own
@@ -184,7 +183,6 @@ private:
   Ogre::SceneNode* orientation_offset_node_[kNumOriShapes];
 
   rviz::Shape* position_shape_;   ///< Ellipse used for the position covariance
-  rviz::Shape* orientation_shape_[kNumOriShapes];   ///< Cylinders used for the orientation covariance
 
   bool local_rotation_;
 
@@ -209,6 +207,6 @@ private:
   friend class CovarianceProperty;
 };
 
-} // namespace rviz_plugin_covariance
+} // namespace mav_pose_rviz_plugin
 
 #endif /* COVARIANCE_VISUAL_H */

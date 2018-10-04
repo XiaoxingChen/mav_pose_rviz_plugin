@@ -41,7 +41,7 @@
 
 using namespace rviz;
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 CovarianceProperty::CovarianceProperty( const QString& name,
@@ -243,4 +243,4 @@ bool CovarianceProperty::getOrientationBool()
 
 
 
-} // end namespace rviz_plugin_covariance
+} // end namespace mav_pose_rviz_plugin

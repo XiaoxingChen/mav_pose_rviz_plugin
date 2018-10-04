@@ -12,7 +12,7 @@
 
 using namespace rviz;
 
-namespace rviz_plugin_covariance
+namespace mav_pose_rviz_plugin
 {
 
 namespace
@@ -196,10 +196,6 @@ CovarianceVisual::CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::Sce
     // Does not inherit scale from the parent. This is needed to keep the cylinders with the same height. The scale is set by setOrientationScale()
     orientation_offset_node_[i]->setInheritScale( false );
 
-    if(i != kYaw2D)
-      orientation_shape_[i] = new rviz::Shape(rviz::Shape::Cylinder, scene_manager_, orientation_offset_node_[i]);
-    else
-      orientation_shape_[i] = new rviz::Shape(rviz::Shape::Cone, scene_manager_, orientation_offset_node_[i]);
 
     // Initialize all current scales to 0
     current_ori_scale_[i] = Ogre::Vector3(0,0,0);
@@ -241,11 +237,6 @@ CovarianceVisual::~CovarianceVisual()
   delete position_shape_;
   scene_manager_->destroySceneNode( position_node_->getName() );
 
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    delete orientation_shape_[i];
-    scene_manager_->destroySceneNode( orientation_offset_node_[i]->getName() );
-  }
 
   scene_manager_->destroySceneNode( position_scale_node_->getName() );
   scene_manager_->destroySceneNode( fixed_orientation_node_->getName() );
@@ -375,12 +366,6 @@ void CovarianceVisual::updateOrientation( const Eigen::Matrix6d& covariance, Sha
     radianScaleToMetricScaleBounded(shape_scale.z, max_degrees);
   }
 
-  // Rotate and scale the scene node of the orientation part
-  orientation_shape_[index]->setOrientation(shape_orientation);
-  if(!shape_scale.isNaN())
-      orientation_shape_[index]->setScale(shape_scale);
-  else
-      ROS_WARN_STREAM("orientation shape_scale contains NaN: " << shape_scale);
 }
 
 void CovarianceVisual::setScales( float pos_scale, float ori_scale)
@@ -426,31 +411,6 @@ void CovarianceVisual::setOrientationScale( float ori_scale )
   // convert it to meters and apply to the shape scale. Note we have different invariant
   // scales in the 3D and in 2D.
   current_ori_scale_factor_ = ori_scale;
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    // Recover the last computed scale
-    Ogre::Vector3 shape_scale = current_ori_scale_[i];
-    if(i == kYaw2D)
-    {
-      // Changes in scale in 2D only affects the x dimension
-      // Apply the current scale factor
-      shape_scale.x *= current_ori_scale_factor_;
-      // Convert from radians to meters
-      radianScaleToMetricScaleBounded(shape_scale.x, max_degrees);
-    }
-    else
-    {
-      // Changes in scale in 3D only affects the x and z dimensions
-      // Apply the current scale factor
-      shape_scale.x *= current_ori_scale_factor_;
-      shape_scale.z *= current_ori_scale_factor_;
-      // Convert from radians to meters
-      radianScaleToMetricScaleBounded(shape_scale.x, max_degrees);
-      radianScaleToMetricScaleBounded(shape_scale.z, max_degrees);
-    }
-  // Apply the new scale
-  orientation_shape_[i]->setScale(shape_scale);
-  }
 }
 
 void CovarianceVisual::setPositionColor(const Ogre::ColourValue& c)
@@ -460,18 +420,10 @@ void CovarianceVisual::setPositionColor(const Ogre::ColourValue& c)
 
 void CovarianceVisual::setOrientationColor(const Ogre::ColourValue& c)
 {
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    orientation_shape_[i]->setColor(c);
-  }
 }
 
 void CovarianceVisual::setOrientationColorToRGB( float a )
 {
-  orientation_shape_[kRoll]->setColor(Ogre::ColourValue(1.0, 0.0, 0.0, a ));
-  orientation_shape_[kPitch]->setColor(Ogre::ColourValue(0.0, 1.0, 0.0, a ));
-  orientation_shape_[kYaw]->setColor(Ogre::ColourValue(0.0, 0.0, 1.0, a ));
-  orientation_shape_[kYaw2D]->setColor(Ogre::ColourValue(0.0, 0.0, 1.0, a ));
 }
 
 void CovarianceVisual::setPositionColor( float r, float g, float b, float a )
@@ -497,10 +449,6 @@ const Ogre::Quaternion& CovarianceVisual::getPositionCovarianceOrientation()
 void CovarianceVisual::setUserData( const Ogre::Any& data )
 {
   position_shape_->setUserData( data );
-  for(int i = 0; i < kNumOriShapes; i++)
-  {
-    orientation_shape_[i]->setUserData( data );
-  }
 }
 
 void CovarianceVisual::setVisible( bool visible )
@@ -563,9 +511,5 @@ void CovarianceVisual::setRotatingFrame( bool is_local_rotation )
 
 }
 
-rviz::Shape* CovarianceVisual::getOrientationShape(ShapeIndex index)
-{
-  return orientation_shape_[index];
-}
 
-} // namespace rviz_plugin_covariance
+} // namespace mav_pose_rviz_plugin
