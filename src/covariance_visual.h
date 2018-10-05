@@ -32,7 +32,7 @@ namespace Eigen
 namespace mav_pose_rviz_plugin
 {
 
-class CovarianceProperty;
+// class CovarianceProperty;
 
 /**
  * \class CovarianceVisual
@@ -50,7 +50,7 @@ public:
     kNumOriShapes
   };
 
-private:
+// private:
   /**
    * \brief Private Constructor
    * 
@@ -106,14 +106,11 @@ public:
    */
   virtual void setCovariance( const geometry_msgs::PoseWithCovariance& pose );
 
-  virtual const Ogre::Vector3& getPositionCovarianceScale();
-  virtual const Ogre::Quaternion& getPositionCovarianceOrientation();
-
   /**
    * \brief Get the root scene node of the position part of this covariance
    * @return the root scene node of the position part of this covariance
    */
-  Ogre::SceneNode* getPositionSceneNode() { return position_scale_node_; }
+  // Ogre::SceneNode* getPositionSceneNode() { return position_scale_node_; }
 
   /**
    * \brief Get the root scene node of the orientation part of this covariance
@@ -174,16 +171,10 @@ private:
   void updateOrientationVisibility();
 
   Ogre::SceneNode* root_node_;
-  Ogre::SceneNode* fixed_orientation_node_;
-  Ogre::SceneNode* position_scale_node_;
-  Ogre::SceneNode* position_node_;
-
 
   rviz::Shape* position_shape_;   ///< Ellipse used for the position covariance
 
   bool local_rotation_;
-
-  bool pose_2d_;
 
   bool orientation_visible_; ///< If the orientation component is visible.
 
@@ -200,8 +191,6 @@ private:
   virtual const Ogre::Vector3& getPosition();
   virtual const Ogre::Quaternion& getOrientation();
 
-  // Make CovarianceProperty friend class so it create CovarianceVisual objects
-  friend class CovarianceProperty;
 };
 
 } // namespace mav_pose_rviz_plugin

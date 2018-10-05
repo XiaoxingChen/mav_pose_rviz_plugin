@@ -47,7 +47,6 @@
 
 #include "pose_with_covariance_display.h"
 #include "covariance_visual.h"
-#include "covariance_property.h"
 
 #include <Eigen/Dense>
 
@@ -90,13 +89,13 @@ public:
     if( display_->pose_valid_ )
     {
 
-      if( display_->covariance_property_->getBool() )
-      {
-        if(display_->covariance_property_->getPositionBool())
-        {
-          aabbs.push_back( display_->covariance_->getPositionShape()->getEntity()->getWorldBoundingBox() );
-        }
-      }
+      // if( display_->covariance_property_->getBool() )
+      // {
+      //   if(display_->covariance_property_->getPositionBool())
+      //   {
+      //     aabbs.push_back( display_->covariance_->getPositionShape()->getEntity()->getWorldBoundingBox() );
+      //   }
+      // }
     }
   }
 
@@ -139,41 +138,9 @@ private:
 PoseWithCovarianceDisplay::PoseWithCovarianceDisplay()
   : pose_valid_( false )
 {
-  shape_property_ = new EnumProperty( "Shape", "Arrow", "Shape to display the pose as.",
-                                      this, SLOT( updateShapeChoice() ));
-  shape_property_->addOption( "Arrow", Arrow );
-  shape_property_->addOption( "Axes", Axes );
 
-  color_property_ = new ColorProperty( "Color", QColor( 255, 25, 0 ), "Color to draw the arrow.",
-                                       this, SLOT( updateColorAndAlpha() ));
-
-  alpha_property_ = new FloatProperty( "Alpha", 1, "Amount of transparency to apply to the arrow.",
-                                       this, SLOT( updateColorAndAlpha() ));
-  alpha_property_->setMin( 0 );
-  alpha_property_->setMax( 1 );
-
-  shaft_length_property_ = new FloatProperty( "Shaft Length", 1, "Length of the arrow's shaft, in meters.",
-                                              this, SLOT( updateArrowGeometry() ));
-
-  // aleeper: default changed from 0.1 to match change in arrow.cpp
-  shaft_radius_property_ = new FloatProperty( "Shaft Radius", 0.05, "Radius of the arrow's shaft, in meters.",
-                                              this, SLOT( updateArrowGeometry() ));
-  
-  head_length_property_ = new FloatProperty( "Head Length", 0.3, "Length of the arrow's head, in meters.",
-                                             this, SLOT( updateArrowGeometry() ));
-
-  // aleeper: default changed from 0.2 to match change in arrow.cpp
-  head_radius_property_ = new FloatProperty( "Head Radius", 0.1, "Radius of the arrow's head, in meters.",
-                                             this, SLOT( updateArrowGeometry() ));
-
-  axes_length_property_ = new FloatProperty( "Axes Length", 1, "Length of each axis, in meters.",
-                                             this, SLOT( updateAxisGeometry() ));
-
-  axes_radius_property_ = new FloatProperty( "Axes Radius", 0.1, "Radius of each axis, in meters.",
-                                             this, SLOT( updateAxisGeometry() ));
-
-  covariance_property_ = new CovarianceProperty( "Covariance", true, "Whether or not the covariances of the messages should be shown.",
-                                             this, SLOT( queueRender() ));
+  // covariance_property_ = new CovarianceProperty( "Covariance", true, "Whether or not the covariances of the messages should be shown.",
+  //                                            this, SLOT( queueRender() ));
 }
 
 void PoseWithCovarianceDisplay::onInitialize()
@@ -181,13 +148,15 @@ void PoseWithCovarianceDisplay::onInitialize()
   MFDClass::onInitialize();
 
 
-  covariance_ = covariance_property_->createAndPushBackVisual(scene_manager_, scene_node_ );
+  // covariance_ = covariance_property_->createAndPushBackVisual(scene_manager_, scene_node_ );
+  boost::shared_ptr<CovarianceVisual> visual(new CovarianceVisual(scene_manager_, scene_node_, true) );
+  covariance_ = visual;
 
   updateShapeChoice();
   updateColorAndAlpha();
 
   coll_handler_.reset( new PoseWithCovarianceDisplaySelectionHandler( this, context_ ));
-  coll_handler_->addTrackedObjects( covariance_->getPositionSceneNode() );
+  // coll_handler_->addTrackedObjects( covariance_->getPositionSceneNode() );
 }
 
 PoseWithCovarianceDisplay::~PoseWithCovarianceDisplay()
@@ -218,17 +187,7 @@ void PoseWithCovarianceDisplay::updateAxisGeometry()
 
 void PoseWithCovarianceDisplay::updateShapeChoice()
 {
-  bool use_arrow = ( shape_property_->getOptionInt() == Arrow );
 
-  color_property_->setHidden( !use_arrow );
-  alpha_property_->setHidden( !use_arrow );
-  shaft_length_property_->setHidden( !use_arrow );
-  shaft_radius_property_->setHidden( !use_arrow );
-  head_length_property_->setHidden( !use_arrow );
-  head_radius_property_->setHidden( !use_arrow );
-
-  axes_length_property_->setHidden( use_arrow );
-  axes_radius_property_->setHidden( use_arrow );
 
   updateShapeVisibility();
 
@@ -243,7 +202,7 @@ void PoseWithCovarianceDisplay::updateShapeVisibility()
   }
   else
   {
-    covariance_property_->updateVisibility();
+    // covariance_property_->updateVisibility();
   }
 }
 

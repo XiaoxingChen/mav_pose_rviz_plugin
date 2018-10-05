@@ -170,17 +170,18 @@ void radianScaleToMetricScaleBounded(Ogre::Real & radian_scale, float max_degree
 const float CovarianceVisual::max_degrees = 89.0;
 
 CovarianceVisual::CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node, bool is_local_rotation, bool is_visible, float pos_scale, float ori_scale, float ori_offset)
-: Object( scene_manager ), local_rotation_(is_local_rotation), pose_2d_(false), orientation_visible_(is_visible)
+: Object( scene_manager ), local_rotation_(is_local_rotation)/*, pose_2d_(false)*/, orientation_visible_(is_visible)
 {
   // Main node of the visual
   root_node_ = parent_node->createChildSceneNode();
   // Node that will have the same orientation as the fixed frame. Updated from the message on setCovariance()
-  fixed_orientation_node_ = root_node_->createChildSceneNode();
+  // fixed_orientation_node_ = root_node_->createChildSceneNode();
   // Node to scale the position part of the covariance from the property value
-  position_scale_node_ = fixed_orientation_node_->createChildSceneNode();
+  // position_scale_node_ = fixed_orientation_node_->createChildSceneNode();
+  // position_node_ = fixed_orientation_node_->createChildSceneNode();
   // Node to be oriented and scaled from the message's covariance
-  position_node_ = position_scale_node_->createChildSceneNode();
-  position_shape_ = new rviz::Shape(rviz::Shape::Cube, scene_manager_, position_node_);
+  // position_node_ = position_scale_node_->createChildSceneNode();
+  position_shape_ = new rviz::Shape(rviz::Shape::Cube, scene_manager_, root_node_);
 
   // Node to scale the orientation part of the covariance. May be attached to both the local (root) node or the fixed frame node.
   // May be re-attached later by setRotatingFrame()
@@ -207,13 +208,16 @@ CovarianceVisual::CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::Sce
 
 CovarianceVisual::~CovarianceVisual()
 {
+  // stcout << "destructor " << endl;
+  ROS_INFO("destructor");
   delete position_shape_;
-  scene_manager_->destroySceneNode( position_node_->getName() );
+  // scene_manager_->destroySceneNode( position_node_->getName() );
 
-
-  scene_manager_->destroySceneNode( position_scale_node_->getName() );
-  scene_manager_->destroySceneNode( fixed_orientation_node_->getName() );
+  ROS_INFO("delete");
+  
+  // scene_manager_->destroySceneNode( fixed_orientation_node_->getName() );
   scene_manager_->destroySceneNode( root_node_->getName() );
+  ROS_INFO("exit destructor");
 }
 
 void CovarianceVisual::setCovariance( const geometry_msgs::PoseWithCovariance& pose )
@@ -228,10 +232,10 @@ void CovarianceVisual::setCovariance( const geometry_msgs::PoseWithCovariance& p
       }
   }
 
-  if(pose.covariance[14] <= 0 && pose.covariance[21] <= 0 && pose.covariance[28] <= 0 )
-    pose_2d_ = true;
-  else
-    pose_2d_ = false;
+  // if(pose.covariance[14] <= 0 && pose.covariance[21] <= 0 && pose.covariance[28] <= 0 )
+  //   pose_2d_ = true;
+  // else
+  //   pose_2d_ = false;
 
   updateOrientationVisibility();
 
@@ -239,105 +243,67 @@ void CovarianceVisual::setCovariance( const geometry_msgs::PoseWithCovariance& p
   Ogre::Quaternion ori(pose.pose.orientation.w, pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z);
   // Set the orientation of the fixed node. Since this node is attached to the root node, it's orientation will be the 
   // inverse of pose's orientation.
-  fixed_orientation_node_->setOrientation(ori.Inverse());
+  // fixed_orientation_node_->setOrientation(ori.Inverse());
   // Map covariance to a Eigen::Matrix 
   Eigen::Map<const Eigen::Matrix<double,6,6> > covariance(pose.covariance.data());
 
   updatePosition(covariance);
-  if(!pose_2d_)
-  {
-    updateOrientation(covariance, kRoll);
-    updateOrientation(covariance, kPitch);
-    updateOrientation(covariance, kYaw);
-  }
-  else
-  {
-    updateOrientation(covariance, kYaw2D);
-  }
+  
+  updateOrientation(covariance, kRoll);
+  updateOrientation(covariance, kPitch);
+  updateOrientation(covariance, kYaw);
 
 }
 
 void CovarianceVisual::updatePosition( const Eigen::Matrix6d& covariance )
 {
   // Compute shape and orientation for the position part of covariance
-  Ogre::Vector3 shape_scale;
-  Ogre::Quaternion shape_orientation;
-  if(pose_2d_)
-  {
-    computeShapeScaleAndOrientation2D(covariance.topLeftCorner<2,2>(), shape_scale, shape_orientation, XY_PLANE);
-    // Make the scale in z minimal for better visualization
-    shape_scale.z = 0.001; 
-  }
-  else
-  {
-    computeShapeScaleAndOrientation3D(covariance.topLeftCorner<3,3>(), shape_scale, shape_orientation);
-  }
+  // Ogre::Vector3 shape_scale;
+  // Ogre::Quaternion shape_orientation;
+
+  // computeShapeScaleAndOrientation3D(covariance.topLeftCorner<3,3>(), shape_scale, shape_orientation);
+
   // Rotate and scale the position scene node
-  position_node_->setOrientation(shape_orientation);
-  if(!shape_scale.isNaN())
-      position_node_->setScale(shape_scale);
-  else
-      ROS_WARN_STREAM("position shape_scale contains NaN: " << shape_scale);
+  // position_node_->setOrientation(shape_orientation);
 }
 
 void CovarianceVisual::updateOrientation( const Eigen::Matrix6d& covariance, ShapeIndex index )
 {
   Ogre::Vector3 shape_scale;
   Ogre::Quaternion shape_orientation;
-  // Compute shape and orientation for the orientation shape
-  if(pose_2d_)
-  {
-    // We should only enter on this scope if the index is kYaw2D
-    assert(index == kYaw2D);
-    // 2D poses only depend on yaw.
-    shape_scale.x = 2.0*sqrt(covariance(5,5));
-    // To display the cone shape properly the scale along y-axis has to be one.
-    shape_scale.y = 1.0;
-    // Give a minimal height for the cone for better visualization
-    shape_scale.z = 0.001;
-    // Store the computed scale to be used if the user change the scale
-    current_ori_scale_[index] = shape_scale;
-    // Apply the current scale factor
-    shape_scale.x *= current_ori_scale_factor_;
-    // The scale on x means twice the standard deviation, but _in radians_.
-    // So we need to convert it to the linear scale of the shape using tan().
-    // Also, we bound the maximum std
-    radianScaleToMetricScaleBounded(shape_scale.x, max_degrees);
-  }
-  else
-  {
-    assert(index != kYaw2D);
+  // ROS_INFO_STREAM("orientation: " << shape_orientation);
+  
+  assert(index != kYaw2D);
 
-    // Get the correct sub-matrix based on the index
-    Eigen::Matrix2d covarianceAxis;
-    if(index == kRoll)
-    {
-      covarianceAxis = covariance.bottomRightCorner<2,2>();
-    }
-    else if(index == kPitch)
-    {
-      covarianceAxis << covariance(3,3), covariance(3,5), covariance(5,3), covariance(5,5);
-    }
-    else if(index == kYaw)
-    {
-      covarianceAxis = covariance.block<2,2>(3,3);
-    }
-
-    // NOTE: The cylinder mesh is oriented along its y axis, thus we want to flat it out into the XZ plane
-    computeShapeScaleAndOrientation2D(covarianceAxis, shape_scale, shape_orientation, XZ_PLANE);
-    // Give a minimal height for the cylinder for better visualization
-    shape_scale.y = 0.001;    
-    // Store the computed scale to be used if the user change the scale
-    current_ori_scale_[index] = shape_scale;
-    // Apply the current scale factor
-    shape_scale.x *= current_ori_scale_factor_;
-    shape_scale.z *= current_ori_scale_factor_;
-    // The computed scale is equivalent to twice the standard deviation _in radians_.
-    // So we need to convert it to the linear scale of the shape using tan().
-    // Also, we bound the maximum std.
-    radianScaleToMetricScaleBounded(shape_scale.x, max_degrees);
-    radianScaleToMetricScaleBounded(shape_scale.z, max_degrees);
+  // Get the correct sub-matrix based on the index
+  Eigen::Matrix2d covarianceAxis;
+  if(index == kRoll)
+  {
+    covarianceAxis = covariance.bottomRightCorner<2,2>();
   }
+  else if(index == kPitch)
+  {
+    covarianceAxis << covariance(3,3), covariance(3,5), covariance(5,3), covariance(5,5);
+  }
+  else if(index == kYaw)
+  {
+    covarianceAxis = covariance.block<2,2>(3,3);
+  }
+
+  // NOTE: The cylinder mesh is oriented along its y axis, thus we want to flat it out into the XZ plane
+  computeShapeScaleAndOrientation2D(covarianceAxis, shape_scale, shape_orientation, XZ_PLANE);
+  // Give a minimal height for the cylinder for better visualization
+  shape_scale.y = 0.001;    
+  // Store the computed scale to be used if the user change the scale
+  current_ori_scale_[index] = shape_scale;
+  // Apply the current scale factor
+  shape_scale.x *= current_ori_scale_factor_;
+  shape_scale.z *= current_ori_scale_factor_;
+  // The computed scale is equivalent to twice the standard deviation _in radians_.
+  // So we need to convert it to the linear scale of the shape using tan().
+  // Also, we bound the maximum std.
+  radianScaleToMetricScaleBounded(shape_scale.x, max_degrees);
+  radianScaleToMetricScaleBounded(shape_scale.z, max_degrees);
 
 }
 
@@ -349,26 +315,16 @@ void CovarianceVisual::setScales( float pos_scale, float ori_scale)
 
 void CovarianceVisual::setPositionScale( float pos_scale ) 
 {
-  if(pose_2d_)
-    position_scale_node_->setScale( pos_scale, pos_scale, 1.0 );
-  else
-    position_scale_node_->setScale( pos_scale, pos_scale, pos_scale );
+
 }
 
 void CovarianceVisual::setOrientationOffset( float ori_offset )
 {
-  // Scale the orientation root node to position the shapes along the axis
-  // The scale the offset_nodes as well so the displayed shape represents a 1-sigma 
-  // standard deviation when displayed with an scale of 1.0
-  // NOTE: We only want to change the scales of the dimentions that represent the 
-  //       orientation covariance. The other dimensions are set to 1.0.
+
 }
 
 void CovarianceVisual::setOrientationScale( float ori_scale )
 {
-  // Here we update the current scale factor, apply it to the current scale _in radians_, 
-  // convert it to meters and apply to the shape scale. Note we have different invariant
-  // scales in the 3D and in 2D.
   current_ori_scale_factor_ = ori_scale;
 }
 
@@ -395,15 +351,15 @@ void CovarianceVisual::setOrientationColor( float r, float g, float b, float a )
   setOrientationColor( Ogre::ColourValue(r, g, b, a ));
 }
 
-const Ogre::Vector3& CovarianceVisual::getPositionCovarianceScale()
-{
-  return position_node_->getScale();
-}
+// const Ogre::Vector3& CovarianceVisual::getPositionCovarianceScale()
+// {
+//   return position_node_->getScale();
+// }
 
-const Ogre::Quaternion& CovarianceVisual::getPositionCovarianceOrientation()
-{
-  return position_node_->getOrientation();
-}
+// const Ogre::Quaternion& CovarianceVisual::getPositionCovarianceOrientation()
+// {
+//   return position_node_->getOrientation();
+// }
 
 void CovarianceVisual::setUserData( const Ogre::Any& data )
 {
@@ -418,7 +374,7 @@ void CovarianceVisual::setVisible( bool visible )
 
 void CovarianceVisual::setPositionVisible( bool visible )
 {
-  position_node_->setVisible( visible );
+  root_node_->setVisible( visible );
 }
 
 void CovarianceVisual::setOrientationVisible( bool visible )
@@ -434,12 +390,12 @@ void CovarianceVisual::updateOrientationVisibility()
 
 const Ogre::Vector3& CovarianceVisual::getPosition() 
 {
-  return position_node_->getPosition();
+  return root_node_->getPosition();
 }
 
 const Ogre::Quaternion& CovarianceVisual::getOrientation()
 {
-  return position_node_->getOrientation();
+  return root_node_->getOrientation();
 }
 
 void CovarianceVisual::setPosition( const Ogre::Vector3& position )
@@ -449,6 +405,8 @@ void CovarianceVisual::setPosition( const Ogre::Vector3& position )
 
 void CovarianceVisual::setOrientation( const Ogre::Quaternion& orientation )
 {
+  ROS_INFO_STREAM("root node orientation: " << orientation);
+  root_node_->setVisible(true);
   root_node_->setOrientation( orientation );
 }
 

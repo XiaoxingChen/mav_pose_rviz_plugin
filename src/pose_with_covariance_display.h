@@ -24,7 +24,7 @@ namespace mav_pose_rviz_plugin
 {
 
 class CovarianceVisual;
-class CovarianceProperty;
+// class CovarianceProperty;
 
 class PoseWithCovarianceDisplaySelectionHandler;
 typedef boost::shared_ptr<PoseWithCovarianceDisplaySelectionHandler> PoseWithCovarianceDisplaySelectionHandlerPtr;
@@ -66,20 +66,8 @@ private:
   bool pose_valid_;
   PoseWithCovarianceDisplaySelectionHandlerPtr coll_handler_;
 
-  rviz::EnumProperty* shape_property_;
 
-  rviz::ColorProperty* color_property_;
-  rviz::FloatProperty* alpha_property_;
-
-  rviz::FloatProperty* head_radius_property_;
-  rviz::FloatProperty* head_length_property_;
-  rviz::FloatProperty* shaft_radius_property_;
-  rviz::FloatProperty* shaft_length_property_;
-
-  rviz::FloatProperty* axes_length_property_;
-  rviz::FloatProperty* axes_radius_property_;
-
-  CovarianceProperty* covariance_property_;
+  // CovarianceProperty* covariance_property_;
 
   friend class PoseWithCovarianceDisplaySelectionHandler;
 };
