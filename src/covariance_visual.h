@@ -41,14 +41,6 @@ namespace mav_pose_rviz_plugin
 class CovarianceVisual : public rviz::Object
 {
 public:
-  enum ShapeIndex
-  {
-    kRoll=0,
-    kPitch=1,
-    kYaw=2,
-    kYaw2D=3,
-    kNumOriShapes
-  };
 
 // private:
   /**
@@ -66,67 +58,11 @@ public:
   CovarianceVisual( Ogre::SceneManager* scene_manager, Ogre::SceneNode* parent_node, bool is_local_rotation, bool is_visible = true, float pos_scale = 1.0f, float ori_scale = 0.1f, float ori_offset = 0.1f);
 public:
   virtual ~CovarianceVisual();
-
-  /**
-   * \brief Set the position and orientation scales for this covariance
-   *
-   * @param pos_scale Scale of the position covariance
-   * @param ori_scale Scale of the orientation covariance
-   */
-  void setScales( float pos_scale, float ori_scale);
-  void setPositionScale( float pos_scale );
-  void setOrientationOffset( float ori_offset );
-  void setOrientationScale( float ori_scale );
-
-  /**
-   * \brief Set the color of the position covariance. Values are in the range [0, 1]
-   *
-   * @param r Red component
-   * @param g Green component
-   * @param b Blue component
-   */
-  virtual void setPositionColor( float r, float g, float b, float a );
-  void setPositionColor(const Ogre::ColourValue& color);
-
-  /**
-   * \brief Set the color of the orientation covariance. Values are in the range [0, 1]
-   *
-   * @param r Red component
-   * @param g Green component
-   * @param b Blue component
-   */
-  virtual void setOrientationColor( float r, float g, float b, float a );
-  void setOrientationColor(const Ogre::ColourValue& color);
-  void setOrientationColorToRGB(float a);
-
-  /** @brief Set the covariance.
-   *
-   * This effectively changes the orientation and scale of position and orientation 
-   * covariance shapes
-   */
-  virtual void setCovariance( const geometry_msgs::PoseWithCovariance& pose );
-
-  /**
-   * \brief Get the root scene node of the position part of this covariance
-   * @return the root scene node of the position part of this covariance
-   */
-  // Ogre::SceneNode* getPositionSceneNode() { return position_scale_node_; }
-
-  /**
-   * \brief Get the root scene node of the orientation part of this covariance
-   * @return the root scene node of the orientation part of this covariance
-   */
-
   /**
    * \brief Get the shape used to display position covariance
    * @return the shape used to display position covariance
    */
   rviz::Shape* getPositionShape() { return position_shape_; }
-
-  /**
-   * \brief Get the shape used to display orientation covariance in an especific axis
-   * @return the shape used to display orientation covariance in an especific axis
-   */  
 
   /**
    * \brief Sets user data on all ogre objects we own
@@ -141,16 +77,6 @@ public:
   virtual void setVisible( bool visible );
 
   /**
-   * \brief Sets visibility of the position part of this covariance
-   */
-  virtual void setPositionVisible( bool visible );
-
-  /**
-   * \brief Sets visibility of the orientation part of this covariance
-   */
-  virtual void setOrientationVisible( bool visible );
-
-  /**
    * \brief Sets position of the frame this covariance is attached
    */
   virtual void setPosition( const Ogre::Vector3& position );
@@ -160,28 +86,11 @@ public:
    */
   virtual void setOrientation( const Ogre::Quaternion& orientation );
 
-  /**
-   * \brief Sets which frame to attach the covariance of the orientation
-   */
-  virtual void setRotatingFrame( bool use_rotating_frame );
-
 private:
-  void updatePosition( const Eigen::Matrix6d& covariance );
-  void updateOrientation( const Eigen::Matrix6d& covariance, ShapeIndex index );
-  void updateOrientationVisibility();
 
   Ogre::SceneNode* root_node_;
 
   rviz::Shape* position_shape_;   ///< Ellipse used for the position covariance
-
-  bool local_rotation_;
-
-  bool orientation_visible_; ///< If the orientation component is visible.
-
-  Ogre::Vector3 current_ori_scale_[kNumOriShapes];
-  float current_ori_scale_factor_;
-
-  const static float max_degrees;
 
 private:
   // Hide Object methods we don't want to expose

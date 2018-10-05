@@ -11,8 +11,6 @@
 
 namespace rviz
 {
-class Arrow;
-class Axes;
 class ColorProperty;
 class EnumProperty;
 class FloatProperty;
@@ -34,11 +32,6 @@ class PoseWithCovarianceDisplay: public rviz::MessageFilterDisplay<geometry_msgs
 {
 Q_OBJECT
 public:
-  enum Shape
-  {
-    Arrow,
-    Axes,
-  };
 
   PoseWithCovarianceDisplay();
   virtual ~PoseWithCovarianceDisplay();
@@ -47,15 +40,9 @@ public:
   virtual void reset();
 
 protected:
-  /** @brief Overridden from MessageFilterDisplay to get Arrow/Axes visibility correct. */
   virtual void onEnable();
 
 private Q_SLOTS:
-  void updateShapeVisibility();
-  void updateColorAndAlpha();
-  void updateShapeChoice();
-  void updateAxisGeometry();
-  void updateArrowGeometry();
 
 private:
   void clear();
@@ -63,11 +50,7 @@ private:
   virtual void processMessage( const geometry_msgs::PoseWithCovarianceStamped::ConstPtr& message );
 
   boost::shared_ptr<CovarianceVisual> covariance_;
-  bool pose_valid_;
-  PoseWithCovarianceDisplaySelectionHandlerPtr coll_handler_;
 
-
-  // CovarianceProperty* covariance_property_;
 
   friend class PoseWithCovarianceDisplaySelectionHandler;
 };
